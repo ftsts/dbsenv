@@ -9,7 +9,7 @@ import gymnasium as gym
 from gymnasium import spaces
 from .ode_neuron_model import ode_neuron_model
 from .dbs_utils import make_synaptic_connections, pulsatile_input
-from .neural_model import NeuralModel
+
 
 ObsType = np.ndarray
 ActType = np.ndarray

@@ -2,16 +2,9 @@
 
 _Closed-Loop Deep-Brain Stimulation for Controlling Synchronization of Spiking Neurons._
 
-## Gymnasium Examples
-
-Some simple examples of Gymnasium environments and wrappers.
-For some explanations of these examples, see the [Gymnasium documentation](https://gymnasium.farama.org).
-
 ### Environments
 
-This repository hosts the examples that are shown [on the environment creation documentation](https://gymnasium.farama.org/tutorials/gymnasium_basics/environment_creation/).
-
-- `GridWorldEnv`: Simplistic implementation of gridworld environment
+- `DBSEnv`: Implementation of Deep Brain Stimulation environment.
 
 ### Wrappers
 
@@ -29,8 +22,6 @@ If you would like to contribute, follow these steps:
 - Fork this repository
 - Clone your fork
 - Set up pre-commit via `pre-commit install`
-
-PRs may require accompanying PRs in [the documentation repo](https://github.com/Farama-Foundation/Gymnasium/tree/main/docs).
 
 ## Installation
 
