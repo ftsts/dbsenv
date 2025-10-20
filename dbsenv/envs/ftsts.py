@@ -110,9 +110,6 @@ class FTSTSEnv(DBSEnv):
             self,
             action: ActType,
     ) -> tuple[ObsType, SupportsFloat, bool, bool, dict[str, Any]]:
-        
-        print("=FTSTS=")
-
         assert self.action_space.contains(action), \
             f"{action!r} ({type(action)}) invalid."
         assert 1 <= self.i <= self.model.num_samples, \
