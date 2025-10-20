@@ -3,13 +3,14 @@ Environment for simulating Deep Brain Stimulation (DBS) effects on a spiking
 neural network.
 """
 # pylint: disable=invalid-name
+# pylint: disable=missing-function-docstring
 
 from typing import Optional, Any, SupportsFloat
 import numpy as np
-import gymnasium as gym
 from gymnasium import spaces
-from dbs_env.utils.neural_model import NeuralModel
-from dbs_env.utils.sim_config import SimConfig
+from dbsenv.utils.neural_model import NeuralModel
+from dbsenv.utils.sim_config import SimConfig
+from dbsenv.envs.dbs import DBSEnv
 
 ObsType = np.ndarray
 ActType = np.ndarray
@@ -22,15 +23,10 @@ MIN_VSTIM = 10  # (mV)
 MAX_VSTIM = 200  # (mV)
 
 
-class DBSEnv(gym.Env):
+class FTSTSEnv(DBSEnv):
     """
     TODO: docstring
     """
-
-    metadata = {
-        "render_modes": ["human", "rgb_array"],
-        "render_fps": 10,
-    }
 
     def __init__(
         self,
@@ -39,12 +35,12 @@ class DBSEnv(gym.Env):
         model_params: dict | None = None,
         render_mode: Optional[str] = None
     ) -> None:
-        super().__init__()
+        super().__init__(sim_config=sim_config, model_class=NeuralModel)
 
         self.sim_config = sim_config
         self.model_class = model_class
-        self.model_params = model_params
-        self.model = model_class(sim_config, **(model_params or {}))
+        self.model_params = model_params or {}
+        self.model = model_class(sim_config, **self.model_params)
 
         self.stim_onset_time = int(
             self.model.duration * STIMULATION_ONSET_TIME_RATIO
@@ -67,13 +63,9 @@ class DBSEnv(gym.Env):
 
         self.render_mode = render_mode
         self.state = None
-        self.i = 1  # sample index [1, num_samples]
+        self.i = 1  # sample index
 
     def _get_obs(self) -> ObsType:
-        """
-        Returns the current state/observation.
-        """
-
         if self.state is None:
             num_state_variables = self.observation_space.shape[0]
             self.state = np.zeros(num_state_variables, dtype=np.float64)
@@ -99,15 +91,11 @@ class DBSEnv(gym.Env):
         seed: Optional[int] = None,
         options: Optional[dict] = None
     ) -> tuple[ObsType, dict[str, Any]]:
-        """
-        Resets some stuff...
-        """
         super().reset(seed=seed)
 
-        self.model = self.model_class(
-            self.sim_config,
-            **(self.model_params or {})
-        )
+        self.model = self.model_class(self.sim_config, **self.model_params)
+        self.state = None
+        self.i = 1
 
         self.stim_onset_time = int(
             self.model.duration * STIMULATION_ONSET_TIME_RATIO
@@ -115,9 +103,6 @@ class DBSEnv(gym.Env):
         self.plasticity_onset_time = int(
             self.model.duration * PLASTICITY_ONSET_TIME_RATIO
         )
-        self.state = None
-
-        self.i = 1  # [1, num_samples + 1]
 
         return self._get_obs(), {}
 
@@ -125,9 +110,9 @@ class DBSEnv(gym.Env):
             self,
             action: ActType,
     ) -> tuple[ObsType, SupportsFloat, bool, bool, dict[str, Any]]:
-        """
-        Takes a step (runs one sample of ODE).
-        """
+        
+        print("=FTSTS=")
+
         assert self.action_space.contains(action), \
             f"{action!r} ({type(action)}) invalid."
         assert 1 <= self.i <= self.model.num_samples, \
@@ -217,39 +202,3 @@ class DBSEnv(gym.Env):
             self.render(mode="human")
 
         return state, reward, terminated, truncated, infos
-
-    def render(self, mode: str = "human") -> None:
-        """
-        Renders the environment.
-        """
-
-        if mode == "human":
-            if self.state is None:
-                raise RuntimeError("Environment has not been reset yet.")
-
-            (
-                synchrony,
-                mean_vE,
-                std_vE,
-                mean_vI,
-                std_vI,
-            ) = self.state
-
-            print(f"Step: {self.i}")
-            print(f"\tSynchrony: {synchrony:.4f}")
-            print(f"\tMean vE: {mean_vE:.4f} mV, Std vE: {std_vE:.4f} mV")
-            print(f"\tMean vI: {mean_vI:.4f} mV, Std vI: {std_vI:.4f} mV")
-
-        elif mode == "rgb_array":
-            raise NotImplementedError(
-                "Rendering to RGB array is not implemented."
-            )
-
-        else:
-            raise ValueError(f"Unknown render mode: {mode}")
-
-    def close(self) -> None:
-        """
-        Closes the environment.
-        """
-        pass

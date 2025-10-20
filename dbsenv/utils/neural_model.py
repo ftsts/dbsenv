@@ -4,9 +4,9 @@ Neural Model for FTSTS.
 # pylint: disable=invalid-name
 
 import numpy as np
-from dbs_env.utils.stimulation import pulsatile_input
-from dbs_env.utils.connectivity import make_synaptic_connections
-from dbs_env.utils.sim_config import SimConfig
+from dbsenv.utils.stimulation import pulsatile_input
+from dbsenv.utils.connectivity import make_synaptic_connections
+from dbsenv.utils.sim_config import SimConfig
 
 
 DEFAULT_NE = 160  # number of excitatory neurons
