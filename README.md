@@ -28,6 +28,6 @@ If you would like to contribute, follow these steps:
 To install your new environment, run the following commands:
 
 ```{shell}
-cd dbs_env
+cd dbsenv
 pip install -e .
 ```

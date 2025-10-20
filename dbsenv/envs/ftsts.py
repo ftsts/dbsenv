@@ -115,8 +115,6 @@ class FTSTSEnv(DBSEnv):
         assert 1 <= self.i <= self.model.num_samples, \
             f"step {self.i} out of range [1, {self.model.num_samples}]"
 
-        print(self.i)
-
         sample_duration = self.model.sample_duration  # (ms)
         num_steps_per_sample = self.model.num_steps_per_sample
 
