@@ -8,8 +8,8 @@ from typing import Optional, Any, SupportsFloat
 import numpy as np
 import gymnasium as gym
 from gymnasium import spaces
-from .neural_model import NeuralModel
-from .dbs_utils import SimulationConfig
+from dbs_env.utils.neural_model import NeuralModel
+from dbs_env.utils.dbs_utils import SimulationConfig
 
 ObsType = np.ndarray
 ActType = np.ndarray

@@ -4,11 +4,9 @@ Neural Model for FTSTS.
 # pylint: disable=invalid-name
 
 import numpy as np
-from .dbs_utils import (
-    SimulationConfig,
-    pulsatile_input,
-    make_synaptic_connections,
-)
+from dbs_env.utils.stimulation import pulsatile_input
+from dbs_env.utils.connectivity import make_synaptic_connections
+from dbs_env.utils.dbs_utils import SimulationConfig  # TODO: NUKE THIS TRASH
 
 
 V_REST = 0  # (mV) resting potential
