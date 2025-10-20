@@ -1,11 +1,8 @@
-# TODO: NUKE THIS TRASH
+from dataclasses import dataclass
 
-class SimulationConfig:
-    """
-    A temporary consolidation of shared parameters until I figure out how
-    best to share them.
-    """
 
+@dataclass
+class SimConfig:
     def __init__(
             self,
             duration=25_000,  # (ms) duration of simulation
@@ -13,7 +10,7 @@ class SimulationConfig:
             sample_duration=20,  # (ms)
             seed=None,
     ):
-        self.seed = seed
         self.duration = duration
         self.step_size = step_size
         self.sample_duration = sample_duration
+        self.seed = seed

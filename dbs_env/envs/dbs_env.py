@@ -9,7 +9,7 @@ import numpy as np
 import gymnasium as gym
 from gymnasium import spaces
 from dbs_env.utils.neural_model import NeuralModel
-from dbs_env.utils.dbs_utils import SimulationConfig
+from dbs_env.utils.sim_config import SimConfig
 
 ObsType = np.ndarray
 ActType = np.ndarray
@@ -32,22 +32,19 @@ class DBSEnv(gym.Env):
         "render_fps": 10,
     }
 
-    def __init__(self, render_mode: Optional[str] = None):
+    def __init__(
+        self,
+        sim_config: SimConfig,
+        model_class: type[NeuralModel],
+        model_params: dict | None = None,
+        render_mode: Optional[str] = None
+    ) -> None:
         super().__init__()
 
-        # Define Shared Parameters (I don't like this).
-        self.shared_params = SimulationConfig(
-            duration=5000,
-            step_size=0.1,
-            sample_duration=20,
-        )
-
-        # Define the Neural Model.
-        self.model = NeuralModel(
-            shared_params=self.shared_params,
-            num_e=160,
-            num_i=40,
-        )
+        self.sim_config = sim_config
+        self.model_class = model_class
+        self.model_params = model_params
+        self.model = model_class(sim_config, **(model_params or {}))
 
         self.stim_onset_time = int(
             self.model.duration * STIMULATION_ONSET_TIME_RATIO
@@ -105,13 +102,13 @@ class DBSEnv(gym.Env):
         """
         Resets some stuff...
         """
-
         super().reset(seed=seed)
-        self.model = NeuralModel(
-            shared_params=self.shared_params,
-            num_e=160,
-            num_i=40,
+
+        self.model = self.model_class(
+            self.sim_config,
+            **(self.model_params or {})
         )
+
         self.stim_onset_time = int(
             self.model.duration * STIMULATION_ONSET_TIME_RATIO
         )

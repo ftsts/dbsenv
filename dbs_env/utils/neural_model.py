@@ -6,8 +6,11 @@ Neural Model for FTSTS.
 import numpy as np
 from dbs_env.utils.stimulation import pulsatile_input
 from dbs_env.utils.connectivity import make_synaptic_connections
-from dbs_env.utils.dbs_utils import SimulationConfig  # TODO: NUKE THIS TRASH
+from dbs_env.utils.sim_config import SimConfig
 
+
+DEFAULT_NE = 160  # number of excitatory neurons
+DEFAULT_NI = 40  # number of inhibitory neurons
 
 V_REST = 0  # (mV) resting potential
 V_THRESHOLD = 20  # (mV) threshold potential for action potential
@@ -24,20 +27,14 @@ class NeuralModel:
     Excitatory-inhibitory network model with synaptic plasticity.
     """
 
-    def __init__(
-            self,
-            shared_params: SimulationConfig,  # temp shared params
-            num_e: int = 1600,  # number of excitatory neurons
-            num_i: int = 400,  # number of inhibitory neuronsƒ
-            seed=None,  # random seed for reproducibility
-    ):
-        if seed is not None:
-            np.random.seed(seed)
+    def __init__(self, sim_config: SimConfig, **model_params):
+        # self.seed = model_params.get("seed", 42)
+        # np.random.seed(self.seed)
 
         # Run Parameters.
-        self.duration = shared_params.duration
-        self.step_size = shared_params.step_size
-        self.sample_duration = shared_params.sample_duration
+        self.duration = sim_config.duration
+        self.step_size = sim_config.step_size
+        self.sample_duration = sim_config.sample_duration
         # self.sample_duration = int(duration * SAMPLE_RATIO)
         assert self.sample_duration > 0
 
@@ -51,8 +48,8 @@ class NeuralModel:
         self.mew_i = 18
         self.sigma_i = 3
         self.mew_c = 0
-        self.num_e = num_e
-        self.num_i = num_i
+        self.num_e = model_params.get("num_e", DEFAULT_NE)
+        self.num_i = model_params.get("num_i", DEFAULT_NI)
         self.num_neurons = self.num_e + self.num_i
 
         # Synaptic Parameters.
