@@ -115,6 +115,8 @@ class FTSTSEnv(DBSEnv):
         assert 1 <= self.i <= self.model.num_samples, \
             f"step {self.i} out of range [1, {self.model.num_samples}]"
 
+        print(self.i)
+
         sample_duration = self.model.sample_duration  # (ms)
         num_steps_per_sample = self.model.num_steps_per_sample
 
@@ -132,6 +134,8 @@ class FTSTSEnv(DBSEnv):
         plast_on = (
             (self.i * sample_duration) >= self.plasticity_onset_time
         )
+        assert stim_on in (0, 1)
+        assert plast_on in (0, 1)
 
         # Define the Sample Window.
         sample_start = (self.i >= 2) * (self.i - 1) * num_steps_per_sample
@@ -173,9 +177,20 @@ class FTSTSEnv(DBSEnv):
             percent_V_stim=1,
         )
 
-        # Compute State Variables.
+        # Recorded (state) Variables.
         mean_vE = np.mean(v_e[0:-1, :], axis=1)
         mean_vI = np.mean(v_i[0:-1, :], axis=1)
+        self.model.time_array[sample_start:sample_end, 0] = (
+            step_times[0:-1] + (self.i - 1) * sample_duration
+        )
+        self.model.w_ie[sample_start:sample_end, 0] = np.mean(
+            w_ie[0:-1, :],
+            axis=1
+        )
+        self.model.spike_e[sample_start:sample_end, :] = spike_e[0:-1, :]
+        self.model.spike_i[sample_start:sample_end, :] = spike_i[0:-1, :]
+        self.model.spike_time_e[sample_start:sample_end, :] = spt_e[0:-1, :]
+
         self.state = (
             # Synchrony.
             synchrony,
@@ -188,12 +203,30 @@ class FTSTSEnv(DBSEnv):
             # etc.
         )
 
+        # Update Initial Conditions (for next run).
+        self.model.v_e0 = v_e[-1, :].reshape(1, -1)
+        self.model.v_i0 = v_i[-1, :].reshape(1, -1)
+        self.model.s_ei0 = s_ei[-1, :].reshape(1, -1)
+        self.model.s_ie0 = s_ie[-1, :].reshape(1, -1)
+        self.model.x_ei0 = x_ei[-1, :].reshape(1, -1)
+        self.model.x_ie0 = x_ie[-1, :].reshape(1, -1)
+        self.model.apost0 = apost[-1, :].reshape(1, -1)
+        self.model.apre0 = apre[-1, :].reshape(1, -1)
+        self.model.w_ie0 = w_ie[-1, :].reshape(1, -1)
+        self.model.w_ei0 = self.model.weight_0
+        offset = num_steps_per_sample - int(5 / self.model.step_size)
+        self.model.leftover_s_ei = s_ei[offset:-1, :]
+        self.model.leftover_s_ie = s_ie[offset:-1, :]
+        self.model.spt_e0 = spt_e[-1, :]
+
         state = self._get_obs()
         reward = -synchrony  # todo: define reward function
         self.i += 1
-        terminated = self.i == self.model.num_samples
+        terminated = self.i > self.model.num_samples
         truncated = False
-        infos = {}
+        infos = {
+            "spike_time_e": self.model.spike_time_e,
+        }
 
         if self.render_mode == "human":
             self.render(mode="human")

@@ -9,8 +9,8 @@ from dbsenv.utils.connectivity import make_synaptic_connections
 from dbsenv.utils.sim_config import SimConfig
 
 
-DEFAULT_NE = 160  # number of excitatory neurons
-DEFAULT_NI = 40  # number of inhibitory neurons
+DEFAULT_NE = 1600  # number of excitatory neurons
+DEFAULT_NI = 400  # number of inhibitory neurons
 
 V_REST = 0  # (mV) resting potential
 V_THRESHOLD = 20  # (mV) threshold potential for action potential
