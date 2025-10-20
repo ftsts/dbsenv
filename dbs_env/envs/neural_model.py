@@ -29,8 +29,8 @@ class NeuralModel:
     def __init__(
             self,
             shared_params: SimulationConfig,  # temp shared params
-            num_e=1600,  # number of excitatory neurons
-            num_i=400,  # number of inhibitory neuronsƒ
+            num_e: int = 1600,  # number of excitatory neurons
+            num_i: int = 400,  # number of inhibitory neuronsƒ
             seed=None,  # random seed for reproducibility
     ):
         if seed is not None:
@@ -109,7 +109,10 @@ class NeuralModel:
         self.phi0 = np.zeros((1, self.num_e))
         self.phif = np.zeros((1, self.num_e))
         self.synchrony = np.zeros((int(self.num_samples), 1))
+        # synchrony_index
         self.time_syn = np.zeros((int(self.num_samples), 1))
+        self.spike_e = np.zeros((self.num_steps, self.num_e))
+        self.spike_i = np.zeros((self.num_steps, self.num_i))
         self.spike_time_e = np.zeros((self.num_steps, self.num_e))
         self.sp_e_count = np.zeros((
             int(self.num_steps_per_sample),
@@ -147,7 +150,7 @@ class NeuralModel:
         # todo: link to paper/equation
 
         return (
-            V_REST - v + z + mu + (sigma * np.sqrt(tau_m) * x) + stim
+            V_REST - v + z + mu + sigma * np.sqrt(tau_m) * x + stim
         ) / tau_m
 
     def step(self, ue, ui, plast_on, stim_on, percent_V_stim=1):
@@ -191,11 +194,11 @@ class NeuralModel:
         apost = np.zeros((num_steps + 1, self.num_synapses_ie))
         apre = np.zeros((num_steps + 1, self.num_synapses_ie))
         w_ie = np.zeros((num_steps + 1, self.num_synapses_ie))
-        step_times = np.zeros((num_steps + 1, 1))
         spike_e = np.zeros((num_steps + 1, self.num_e))
         spike_i = np.zeros((num_steps + 1, self.num_i))
         # spt_E = np.zeros((1, self.num_e))
         spt_e = np.zeros((num_steps + 1, self.num_e))
+        step_times = np.zeros((num_steps + 1,))
 
         v_e[0, :] = self.v_e0
         v_i[0, :] = self.v_i0
@@ -227,7 +230,7 @@ class NeuralModel:
         delay_index = int(syn_delay / self.step_size) - 1
 
         for t in range(num_steps):
-            step_times[t + 1, 0] = step_times[t, 0] + self.step_size
+            step_times[t + 1] = step_times[t] + self.step_size
 
             # Excitatory-Inhibitory Network Model Updates.
             # Voltage (membrane) potentials.
@@ -315,17 +318,22 @@ class NeuralModel:
             # phif[i+1+int(comp_time/step), :] = 2*np.pi * (time[i+1, 0] + comp_time - spt_E[i, :])
 
             # Check for Spikes.
-            for k in range(self.num_e):  # excitatory
-                if v_e[t, k] < V_THRESHOLD <= v_e[t + 1, k]:
-                    v_e[t + 1, k] = V_RESET
-                    self.ref_e[0, k] = REFRACTORY
-                    spike_e[t + 1, k] = k + 1
-                    spt_e[t + 1, k] = step_times[t + 1, 0] + self.comp_time
-                    for j in range(self.num_i):  # E to I
-                        if self.s_key_ie[k, j] != 0:
-                            syn_idx = int(self.s_key_ie[k, j]) - 1
-                            x_ie[t + 1, j] = (  # + W(t) * δ(t - tpre + tdelay)
-                                x_ie[t, j] + w_ie[t, syn_idx]
+            for e in range(self.num_e):  # excitatory
+                if v_e[t, e] < V_THRESHOLD <= v_e[t + 1, e]:
+                    # Record Spike.
+                    spike_e[t + 1, e] = e + 1
+                    spt_e[t + 1, e] = step_times[t + 1] + self.comp_time
+
+                    # Reset Neuron Potential and Refactory Period.
+                    v_e[t + 1, e] = V_RESET
+                    self.ref_e[0, e] = REFRACTORY
+
+                    # Update Postsynaptic Connections.
+                    for i in range(self.num_i):  # E to I
+                        if self.s_key_ie[e, i] != 0:
+                            syn_idx = int(self.s_key_ie[e, i]) - 1
+                            x_ie[t + 1, i] = (  # + W(t) * δ(t - tpre + tdelay)
+                                x_ie[t, i] + w_ie[t, syn_idx]
                             )
                             # plasticity update - "on_pre"
                             apre[t + 1, syn_idx] = (  # + A0 * δ(t - tpre)
@@ -338,25 +346,29 @@ class NeuralModel:
                             # max synaptic weight check
                             if (self.j_i * w_ie[t + 1, syn_idx]) < MAX_WEIGHT_IE:
                                 w_ie[t + 1, syn_idx] = MAX_WEIGHT_IE / self.j_i
-                elif self.ref_e[0, k] >= 0:  # in refractory period
-                    v_e[t + 1, k] = V_RESET
-                elif v_e[t + 1, k] < V_REST:
-                    v_e[t + 1, k] = V_REST
+                elif self.ref_e[0, e] >= 0:  # in refractory period
+                    v_e[t + 1, e] = V_RESET
+                elif v_e[t + 1, e] < V_REST:
+                    v_e[t + 1, e] = V_REST
 
-            for k in range(self.num_i):  # inhibitory
-                if v_i[t, k] < V_THRESHOLD <= v_i[t + 1, k]:
-                    v_i[t + 1, k] = V_RESET
-                    self.ref_i[0, k] = REFRACTORY
-                    spike_i[t + 1, k] = k + 1 + self.num_e
-                    spike_I_time[t + 1, k] = step_times[t + 1, 0]
+            for i in range(self.num_i):  # inhibitory
+                if v_i[t, i] < V_THRESHOLD <= v_i[t + 1, i]:
+                    # Record Spike.
+                    spike_i[t + 1, i] = i + 1 + self.num_e
+                    spike_I_time[t + 1, i] = step_times[t + 1]
 
-                    for j in range(self.num_e):  # I to E
-                        if self.s_key_ei[k, j] != 0:
-                            syn_idx = int(self.s_key_ei[k, j]) - 1
-                            x_ei[t + 1, j] = x_ei[t, j] - WEI
+                    # Reset Neuron Potential and Refactory Period.
+                    v_i[t + 1, i] = V_RESET
+                    self.ref_i[0, i] = REFRACTORY
+
+                    # Update Postsynaptic Connections.
+                    for e in range(self.num_e):  # I to E
+                        if self.s_key_ei[i, e] != 0:
+                            syn_idx = int(self.s_key_ei[i, e]) - 1
+                            x_ei[t + 1, e] = x_ei[t, e] - WEI
                         # plasticity update - "on_post"
-                        if self.s_key_ie[j, k] != 0:
-                            syn_idx = int(self.s_key_ie[j, k]) - 1
+                        if self.s_key_ie[e, i] != 0:
+                            syn_idx = int(self.s_key_ie[e, i]) - 1
                             apost[t + 1, syn_idx] = apost[t, syn_idx] + dApost_0
                             w_ie[t + 1, syn_idx] = (  # equation (8) in paper
                                 w_ie[t, syn_idx]
@@ -365,11 +377,11 @@ class NeuralModel:
                             # max synaptic weight check
                             if (self.j_i * w_ie[t + 1, syn_idx]) > MAX_WEIGHT_EI:
                                 w_ie[t + 1, syn_idx] = MAX_WEIGHT_EI / self.j_i
-                elif self.ref_i[0, k] >= 0:
+                elif self.ref_i[0, i] >= 0:
                     # check if in refractory period
-                    v_i[t + 1, k] = V_RESET
-                elif v_i[t + 1, k] < V_REST:
-                    v_i[t + 1, k] = V_REST
+                    v_i[t + 1, i] = V_RESET
+                elif v_i[t + 1, i] < V_REST:
+                    v_i[t + 1, i] = V_REST
 
         # Calculate Synchrony.
         # todo: what synchrony measurement is this?
@@ -386,17 +398,17 @@ class NeuralModel:
         # variance of voltage at each time step
         sigma_vi = np.zeros(N)
         sum_sig = 0
-        for j in range(N):
-            sigma_vi[j] = (
-                np.mean(Vcomb[:, j] ** 2)
-                - (np.mean(Vcomb[:, j])) ** 2
+        for i in range(N):
+            sigma_vi[i] = (
+                np.mean(Vcomb[:, i] ** 2)
+                - (np.mean(Vcomb[:, i])) ** 2
             )
-            sum_sig = sum_sig + sigma_vi[j]
+            sum_sig = sum_sig + sigma_vi[i]
 
         syn_squ = sigma_squ_v / (sum_sig / N)
         synchrony = float(np.sqrt(syn_squ))
 
-        assert step_times.shape == (num_steps + 1, 1)
+        assert step_times.shape == (num_steps + 1,)
         assert v_e.shape == (num_steps + 1, self.num_e)
         assert v_i.shape == (num_steps + 1, self.num_i)
         assert s_ei.shape == (num_steps + 1, self.num_e)
