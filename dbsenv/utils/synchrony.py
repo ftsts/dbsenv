@@ -22,16 +22,16 @@ import math
 import ctypes
 import numpy as np
 from tqdm import trange
-from scipy.io import loadmat
-from plotting import plot_kop
 
 
-def kuramoto_syn(sptime: np.ndarray,
-                 t: np.ndarray,
-                 step_size: float,
-                 duration: float,
-                 num_neurons: int,
-                 fast: bool = True):
+def kop(
+    sptime: np.ndarray,
+    t: np.ndarray,
+    step_size: float,
+    duration: float,
+    num_neurons: int,
+    fast: bool = True,
+):
     """
     Returns a list of KOP values,
     representing the neuronal synchronization over time.
@@ -126,45 +126,3 @@ def kop_c(sptime, t, step_size, duration, num_neurons):
     re = np.ctypeslib.as_array(result_ptr, shape=(total_steps,))
 
     return re
-
-
-def main() -> None:
-    """Example usage."""
-
-    # Load data.
-    data = loadmat(
-        "./data/postsim_state/py-160-40-2025-04-10_12-39-28.mat"
-    )
-
-    # Get input parameters.
-    if 'spike_time_E_full' in data.keys():
-        sptime = data['spike_time_E_full']
-    else:
-        sptime = data['spike_time_E']
-    sptime = np.ascontiguousarray(sptime, dtype=np.float64)
-    step_size = float(data['step_size'][0, 0])
-    duration = float(data['duration'][0, 0])
-    ne = int(data['N_E'][0, 0])
-
-    if 't' in data.keys():
-        t = data['t'].reshape(-1)
-    else:
-        t = np.linspace(0.1,  # precision error with np.arange
-                        duration,
-                        int(round((duration - 0.1) / step_size)) + 1)
-
-    t = np.ascontiguousarray(t, dtype=np.float64)
-
-    # Compute Neuron Synchronization.
-    re = kuramoto_syn(
-        sptime=sptime,
-        t=t,
-        step_size=step_size,
-        duration=duration,
-        num_neurons=ne,
-        fast=True,
-    )
-
-
-if __name__ == "__main__":
-    main()
