@@ -20,7 +20,7 @@ from dbsenv.neural_models import NeuralModel
 env = gym.make(
     'dbsenv/DBS-v0',
     sim_config=sim_config,
-    model_class=EILIFNetwork,
+    model_class=NeuralModel,
     model_params={...},
 )
 ```
