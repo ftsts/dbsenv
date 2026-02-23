@@ -1,7 +1,7 @@
 from gymnasium.envs.registration import register
-from dbsenv.envs.ftsts import FTSTSEnv
+from dbsenv.envs import DBSEnv, FTSTSEnv
+from dbsenv.neural_models import NeuralModel, EILIFNetwork
 from dbsenv.utils.sim_config import SimConfig
-from dbsenv.utils.neural_model import NeuralModel
 
 
 register(
@@ -11,7 +11,9 @@ register(
 
 
 __all__ = [
+    "DBSEnv",
     "FTSTSEnv",
-    "SimConfig",
     "NeuralModel",
+    "EILIFNetwork",
+    "SimConfig",
 ]

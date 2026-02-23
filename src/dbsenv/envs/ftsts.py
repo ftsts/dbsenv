@@ -7,13 +7,14 @@ neural network.
 
 from typing import Optional, Any, SupportsFloat
 import numpy as np
+from numpy.typing import NDArray
 from gymnasium import spaces
-from dbsenv.utils.neural_model import NeuralModel
-from dbsenv.utils.sim_config import SimConfig
-from dbsenv.envs.dbs import DBSEnv
+from dbsenv.envs import DBSEnv
+from dbsenv.neural_models import EILIFNetwork
+from dbsenv.utils import SimConfig
 
-ObsType = np.ndarray
-ActType = np.ndarray
+ObsType = NDArray
+ActType = NDArray
 
 INHIBITION_THRESHOLD = 75  # (mV)
 STIMULATION_ONSET_TIME_RATIO = 0.08  # begin after 8% of the simulation time
@@ -31,11 +32,11 @@ class FTSTSEnv(DBSEnv):
     def __init__(
         self,
         sim_config: SimConfig,
-        model_class: type[NeuralModel],
+        model_class: type[EILIFNetwork],
         model_params: dict | None = None,
         render_mode: Optional[str] = None
     ) -> None:
-        super().__init__(sim_config=sim_config, model_class=NeuralModel)
+        super().__init__(sim_config=sim_config, model_class=EILIFNetwork)
 
         self.sim_config = sim_config
         self.model_class = model_class

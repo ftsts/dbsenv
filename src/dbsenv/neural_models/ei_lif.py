@@ -1,12 +1,12 @@
 """
 Neural Model for FTSTS.
 """
-# pylint: disable=invalid-name
 
 import numpy as np
-from dbsenv.utils.stimulation import pulsatile_input
-from dbsenv.utils.connectivity import make_synaptic_connections
-from dbsenv.utils.sim_config import SimConfig
+from dbsenv.neural_models.base import NeuralModel
+from dbsenv.neural_models.stimulation import pulsatile_input
+from dbsenv.neural_models.connectivity import make_synaptic_connections
+from dbsenv.utils import SimConfig
 
 
 DEFAULT_NE = 1600  # number of excitatory neurons
@@ -20,11 +20,11 @@ MAX_WEIGHT_IE = 10  # (mV) maximum synaptic weight for E->I connections
 MAX_WEIGHT_EI = 290  # (mV) maximum synaptic weight for I->E connections
 
 
-class NeuralModel:
+class EILIFNetwork(NeuralModel):
     """
-    Neural Network Model for Simulating Deep Brain Stimulation (DBS).
+    Neural Network for Simulating Deep Brain Stimulation (DBS).
 
-    Excitatory-inhibitory network model with synaptic plasticity.
+    Excitatory-Inhibitory Network of Leaky-Integrate-and-Fire Neurons with Spike-Timing-Dependent-Plasticity.
     """
 
     def __init__(self, sim_config: SimConfig, **model_params):

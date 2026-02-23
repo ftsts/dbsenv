@@ -2,19 +2,20 @@
 Environment for simulating Deep Brain Stimulation (DBS) effects on a spiking
 neural network.
 """
-# pylint: disable=invalid-name
-# pylint: disable=missing-function-docstring
+
 
 from abc import ABC, abstractmethod
 from typing import Optional, Any, SupportsFloat
 import numpy as np
+from numpy.typing import NDArray
 import gymnasium as gym
 from gymnasium import spaces
-from dbsenv.utils.neural_model import NeuralModel
-from dbsenv.utils.sim_config import SimConfig
+from dbsenv.neural_models import NeuralModel
+from dbsenv.utils import SimConfig
 
-ObsType = np.ndarray
-ActType = np.ndarray
+
+ObsType = NDArray
+ActType = NDArray
 
 
 class DBSEnv(gym.Env, ABC):
@@ -70,6 +71,7 @@ class DBSEnv(gym.Env, ABC):
 
         return np.array(self.state, dtype=np.float64)
 
+    @abstractmethod
     def reset(
         self,
         seed: Optional[int] = None,
