@@ -7,7 +7,7 @@ import gymnasium as gym
 from tqdm import tqdm
 import matplotlib.pyplot as plt
 from dbsenv.neural_models import EILIFNetwork
-from dbsenv.neural_models.synchrony import kop
+from dbsenv.utils.synchrony import kop
 from dbsenv.utils import SimConfig
 
 

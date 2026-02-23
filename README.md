@@ -1,15 +1,46 @@
-# <img src="./docs/images/ftsts-logo.png" alt="Logo" width="50" style="vertical-align: middle; margin-right: 10px;"> NeuroLoop DBS Environment
+# <img src="./docs/images/ftsts-logo.png" alt="Logo" width="50" style="vertical-align: middle; margin-right: 10px; border-radius: 5px"> dbsenv
 
-_Closed-Loop Deep-Brain Stimulation for Controlling Synchronization of Spiking Neurons._
+_A collection of gymnasium-style environments for modeling Deep Brain Stimulation._
 
-### Environments
+[docs](https://owenmastropietro.github.io/projects/neuroloop/)
+
+---
+
+## Usage
+
+> See [neuroloop](https://owenmastropietro.github.io/projects/neuroloop/) for a practical use case.
+
+### Example
+
+```py
+import gymnasium as gym
+from dbsenv.envs import DBSEnv
+from dbsenv.neural_models import NeuralModel
+
+env = gym.make(
+    'dbsenv/DBS-v0',
+    sim_config=sim_config,
+    model_class=EILIFNetwork,
+    model_params={...},
+)
+```
+
+> Note: to use the [faster C implementation](./csrc/kop.c) of the Kuramoto Order Paremter to compute synchrony, you must manually compile it.
+>
+> e.g., `gcc -O3 -fPIC -shared csrc/kop.c -o build/libkuramoto.so`
+
+```py
+from dbsenv.utils.synchrony import kop
+
+re = kop(sptime, t, step_size, duration, num_neurons)
+```
+
+## Environments
 
 - `DBSEnv`: Abstract Base Class template for Deep Brain Stimulation environments.
 - `FTSTSEnv`: Implementation of the Forced Temporal-Spike Time Stimulation environment.
 
-### Wrappers
-
-This repository hosts the examples that are shown [on wrapper documentation](https://gymnasium.farama.org/api/wrappers/).
+## Wrappers
 
 - `ClipReward`: A `RewardWrapper` that clips immediate rewards to a valid range
 - `DiscreteActions`: An `ActionWrapper` that restricts the action space to a finite subset
@@ -17,19 +48,11 @@ This repository hosts the examples that are shown [on wrapper documentation](htt
 - `ReacherRewardWrapper`: Allow us to weight the reward terms for the reacher environment
 - `DBSNormalizeObservation`: An `ObservationWrapper` that clips and normalizes the observation space
 
-### Contributing
+## Contributing
 
 If you would like to contribute, follow these steps:
 
 - Fork this repository
 - Clone your fork
 - Set up pre-commit via `pre-commit install`
-
-## Installation
-
-To install your new environment, run the following commands:
-
-```{shell}
-cd dbsenv
-pip install -e .
-```
+- Make changes, add tests, and submit a pull request

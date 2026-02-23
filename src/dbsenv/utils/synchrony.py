@@ -17,9 +17,9 @@ High level of synchrony at high synaptic weights.
 Low level of synchrony at low synaptic weights.
 """
 
-import os
 import math
 import ctypes
+from pathlib import Path
 import numpy as np
 from tqdm import trange
 
@@ -80,13 +80,15 @@ def kop_py(sptime, t, step_size, duration, num_neurons):
 def kop_c(sptime, t, step_size, duration, num_neurons):
     """Calls C implementaion."""
 
-    path = "./libkuramoto.so"  # path to compiled c function
+    here = Path(__file__)
+    build_dir = here.parent.parent.parent.parent / "build"  # hawk tuah
+    lib_path = build_dir / "libkuramoto.so"  # path to compiled c function
 
-    if not os.path.exists(path):
+    if not lib_path.exists():
         print(
             "\n==========\n"
             "WARNING:\n"
-            f"Failed to find compiled C function in {path}.\n"
+            f"Failed to find compiled C function in {lib_path}.\n"
             "You may have forgotten to compile the C code for Kuramoto Synchrony.\n"
             "Using Python implementation instead."
             "\n==========\n"
@@ -94,7 +96,7 @@ def kop_c(sptime, t, step_size, duration, num_neurons):
         return kop_py(sptime, t, step_size, duration, num_neurons)
 
     # Load shared library.
-    lib = ctypes.CDLL(path)
+    lib = ctypes.CDLL(str(lib_path))
 
     # Define the function signature.
     lib.kuramoto_syn.argtypes = [
