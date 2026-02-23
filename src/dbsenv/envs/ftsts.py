@@ -20,7 +20,7 @@ INHIBITION_THRESHOLD = 75  # (mV)
 STIMULATION_ONSET_TIME_RATIO = 0.08  # begin after 8% of the simulation time
 PLASTICITY_ONSET_TIME_RATIO = 0.004  # begin after 0.4% of the simulation time
 # todo: sample duration ratio
-MIN_VSTIM = 10  # (mV)
+MIN_VSTIM = 0  # (mV)
 MAX_VSTIM = 200  # (mV)
 
 
@@ -73,6 +73,18 @@ class FTSTSEnv(DBSEnv):
 
         return np.array(self.state, dtype=np.float64)
 
+    def _get_info(self, action=None) -> dict[str, Any]:
+        assert self.state is not None
+
+        return {
+            "num_samples": self.model.num_samples,
+            "step_size": self.model.step_size,
+            "duration": self.model.duration,
+            "num_neurons_e": self.model.num_e,
+            "action": action,
+            "spike_time_e": self.model.spike_time_e,
+        }
+
     def reset(
         self,
         seed: Optional[int] = None,
@@ -91,7 +103,10 @@ class FTSTSEnv(DBSEnv):
             self.model.duration * PLASTICITY_ONSET_TIME_RATIO
         )
 
-        return self._get_obs(), {}
+        obs = self._get_obs()
+        info = self._get_info()
+
+        return obs, info
 
     def step(
             self,
@@ -223,11 +238,9 @@ class FTSTSEnv(DBSEnv):
             0.8 * synchrony ** 2
         )
         # todo: if terminated: add kop reward factor
-        infos = {
-            "spike_time_e": self.model.spike_time_e,
-        }
+        info = self._get_info(Vstim)
 
         if self.render_mode == "human":
             self.render(mode="human")
 
-        return state, reward, terminated, truncated, infos
+        return state, reward, terminated, truncated, info
