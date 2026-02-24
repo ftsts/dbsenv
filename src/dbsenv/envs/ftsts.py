@@ -83,6 +83,10 @@ class FTSTSEnv(DBSEnv):
             "num_neurons_e": self.model.num_e,
             "action": action,
             "spike_time_e": self.model.spike_time_e,
+            "spike_e": self.model.spike_e,
+            "spike_i": self.model.spike_i,
+            "w_ie": self.model.w_ie,
+            "j_i": self.model.j_i,
         }
 
     def reset(
